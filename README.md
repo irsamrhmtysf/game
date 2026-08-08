@@ -1,1 +1,1 @@
-GETK (Game Edukasi TK)
+irsam.github.io
