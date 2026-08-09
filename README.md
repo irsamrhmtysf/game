@@ -1,1 +1,2 @@
-irsam.github.io
+
+https://irsamrhmtysf.github.io/game/
