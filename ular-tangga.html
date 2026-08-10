@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ular Tangga</title>
+<style>
+:root {
+  --bg1: #0c1222;
+  --bg2: #1a1040;
+  --card: #1e293b;
+  --accent: #22d3ee;
+  --gold: #fbbf24;
+  --p1: #3b82f6;
+  --p2: #f59e0b;
+  --p3: #a855f7;
+  --p4: #ec4899;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: radial-gradient(ellipse at top, #1e1b4b 0%, #0c1222 70%);
+  color: #f1f5f9;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  overflow-x: hidden;
+}
+h1 {
+  font-size: 1.7rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, #22d3ee, #a855f7, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 4px 0 2px;
+  letter-spacing: -0.5px;
+  text-shadow: 0 0 30px rgba(34,211,238,0.3);
+}
+.subtitle { font-size: 0.75rem; opacity: 0.65; margin-bottom: 12px; }
+
+/* Setup */
+#setup {
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border-radius: 24px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.setup-title { font-size: 1.15rem; margin-bottom: 18px; text-align: center; font-weight: 700; }
+.player-select { display: flex; gap: 10px; margin-bottom: 22px; justify-content: center; }
+.p-btn {
+  width: 52px; height: 52px; border-radius: 14px;
+  border: 2px solid transparent; background: #334155;
+  color: white; font-size: 1.25rem; font-weight: 800;
+  cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 0 #1e293b;
+}
+.p-btn.active {
+  border-color: var(--accent); background: linear-gradient(135deg, #0e7490, #0891b2);
+  transform: translateY(-3px); box-shadow: 0 7px 0 #0e7490;
+}
+.start-btn {
+  width: 100%; padding: 15px; border: none; border-radius: 16px;
+  background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+  color: white; font-size: 1.1rem; font-weight: 800;
+  cursor: pointer; box-shadow: 0 6px 20px rgba(34,211,238,0.35);
+  transition: transform 0.15s;
+}
+.start-btn:active { transform: scale(0.97); }
+
+/* Game */
+#game { display: none; width: 100%; max-width: 460px; flex-direction: column; align-items: center; gap: 10px; }
+.top-bar {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+}
+.turn-info {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  padding: 9px 16px; border-radius: 14px; font-weight: 700; font-size: 0.95rem;
+  border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.reset-btn {
+  background: #334155; border: none; color: #cbd5e1; padding: 9px 14px;
+  border-radius: 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+}
+
+/* Board */
+.board-wrap {
+  position: relative; width: 100%; aspect-ratio: 1; max-width: 420px;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border-radius: 18px; padding: 10px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 0 0 2px #334155;
+}
+.board {
+  display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr);
+  width: 100%; height: 100%; gap: 3px; border-radius: 12px; overflow: hidden;
+  background: #0f172a;
+}
+.cell {
+  position: relative; background: #1e293b;
+  display: flex; align-items: flex-start; justify-content: flex-start;
+  font-size: 0.5rem; font-weight: 700; color: #64748b;
+  padding: 2px 3px; border-radius: 4px;
+  transition: background 0.2s;
+}
+.cell.light { background: #243044; }
+.cell.snake-start { background: linear-gradient(145deg, #7f1d1d, #450a0a); box-shadow: inset 0 0 8px rgba(239,68,68,0.3); }
+.cell.ladder-start { background: linear-gradient(145deg, #14532d, #052e16); box-shadow: inset 0 0 8px rgba(34,197,94,0.3); }
+.cell.end { background: linear-gradient(145deg, #854d0e, #422006); box-shadow: inset 0 0 10px rgba(251,191,36,0.4); }
+.cell.highlight { animation: pulseCell 0.4s ease; }
+@keyframes pulseCell { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08); box-shadow:0 0 12px var(--accent)} }
+
+.hint { position: absolute; font-size: 0.65rem; bottom: 1px; right: 2px; opacity: 0.85; }
+
+.token {
+  position: absolute; width: 26%; height: 26%; border-radius: 50%;
+  border: 2.5px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.2);
+  z-index: 10; display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 900; color: white;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.token::after {
+  content: ''; position: absolute; inset: 3px; border-radius: 50%;
+  background: linear-gradient(145deg, rgba(255,255,255,0.35), transparent);
+  pointer-events: none;
+}
+
+/* Dice */
+.controls { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.dice-area { display: flex; align-items: center; gap: 18px; }
+.dice {
+  width: 70px; height: 70px; background: linear-gradient(145deg, #fff, #e2e8f0);
+  border-radius: 14px; display: grid; grid-template-columns: repeat(3,1fr); grid-template-rows: repeat(3,1fr);
+  padding: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 -3px 6px rgba(0,0,0,0.1);
+  position: relative; border: 2px solid #cbd5e1;
+}
+.dice.rolling { animation: diceShake 0.12s linear infinite; }
+@keyframes diceShake {
+  0% { transform: translate(0,0) rotate(0); }
+  25% { transform: translate(-4px,3px) rotate(-8deg); }
+  50% { transform: translate(3px,-2px) rotate(6deg); }
+  75% { transform: translate(-2px,-3px) rotate(-4deg); }
+  100% { transform: translate(0,0) rotate(0); }
+}
+.dot { width: 11px; height: 11px; background: #0f172a; border-radius: 50%; margin: auto; box-shadow: inset 0 1px 2px rgba(0,0,0,0.3); }
+.dot.hide { visibility: hidden; }
+
+.roll-btn {
+  padding: 15px 36px; border: none; border-radius: 18px;
+  background: linear-gradient(135deg, #22d3ee, #6366f1);
+  color: white; font-size: 1.1rem; font-weight: 800; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(34,211,238,0.35), 0 4px 0 #0e7490;
+  transition: all 0.15s;
+}
+.roll-btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+.roll-btn:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 4px 12px rgba(34,211,238,0.3); }
+
+.players-bar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.player-chip {
+  display: flex; align-items: center; gap: 7px;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  padding: 7px 13px; border-radius: 20px; font-size: 0.82rem; font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+.player-chip.active { outline: 2px solid var(--accent); box-shadow: 0 0 12px rgba(34,211,238,0.25); }
+.player-chip .dot-p { width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+
+/* Overlay */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+  display: none; align-items: center; justify-content: center; z-index: 100;
+  backdrop-filter: blur(6px);
+}
+.overlay.show { display: flex; }
+.modal {
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  padding: 28px 24px; border-radius: 24px; text-align: center;
+  max-width: 320px; width: 92%; box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.modal h2 { font-size: 1.5rem; margin-bottom: 6px; }
+.modal p { opacity: 0.8; margin-bottom: 16px; font-size: 0.95rem; }
+.status-list { text-align: left; margin: 12px 0 18px; background: #0f172a; border-radius: 12px; padding: 12px; }
+.status-item { display: flex; justify-content: space-between; padding: 6px 4px; font-size: 0.9rem; border-bottom: 1px solid #1e293b; }
+.status-item:last-child { border-bottom: none; }
+.status-item .rank { font-weight: 800; width: 28px; }
+.modal button {
+  width: 100%; padding: 13px; border: none; border-radius: 14px;
+  background: linear-gradient(90deg, #22d3ee, #8b5cf6); color: white;
+  font-weight: 800; font-size: 1rem; cursor: pointer;
+}
+
+.confetti {
+  position: fixed; width: 10px; height: 10px; top: -10px; z-index: 200;
+  animation: fall linear forwards; border-radius: 2px;
+}
+@keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+</style>
+</head>
+<body>
+  <h1>Ular Tangga</h1>
+  <p class="subtitle">🐍 Mainkan & nikmati! 🪜</p>
+  
+  <div id="setup">
+    <div class="setup-title">Pilih Jumlah Pemain</div>
+    <div class="player-select">
+      <button class="p-btn active" data-n="2">2</button>
+      <button class="p-btn" data-n="3">3</button>
+      <button class="p-btn" data-n="4">4</button>
+    </div>
+    <button class="start-btn" id="startBtn">Mulai Main</button>
+  </div>
+  
+  <div id="game">
+    <div class="top-bar">
+      <div class="turn-info" id="turnInfo">Giliran: Biru</div>
+      <button class="reset-btn" id="resetBtn">Reset</button>
+    </div>
+    
+    <div class="board-wrap">
+      <div class="board" id="board"></div>
+    </div>
+    
+    <div class="controls">
+      <div class="dice-area">
+        <div class="dice" id="dice">
+          <div class="dot" data-pos="1"></div>
+          <div class="dot" data-pos="2"></div>
+          <div class="dot" data-pos="3"></div>
+          <div class="dot" data-pos="4"></div>
+          <div class="dot" data-pos="5"></div>
+          <div class="dot" data-pos="6"></div>
+          <div class="dot" data-pos="7"></div>
+          <div class="dot" data-pos="8"></div>
+          <div class="dot" data-pos="9"></div>
+        </div>
+        <button class="roll-btn" id="rollBtn">🎲 Lempar</button>
+      </div>
+      <div class="players-bar" id="playersBar"></div>
+    </div>
+  </div>
+  
+  <div class="overlay" id="winOverlay">
+    <div class="modal">
+      <h2 id="winTitle">🎉 Menang!</h2>
+      <p id="winMsg">Pemain juara!</p>
+      <div class="status-list" id="statusList"></div>
+      <button id="playAgain">Main Lagi</button>
+    </div>
+  </div>
+
+<script>
+const LADDERS = {1:38,4:14,9:31,21:42,28:84,36:44,51:67,71:91,80:100};
+const SNAKES = {16:6,47:26,49:11,56:53,62:19,64:60,87:24,93:73,95:75,98:78};
+const COLORS = ['#3b82f6','#f59e0b','#a855f7','#ec4899'];
+const NAMES = ['Biru','Oranye','Ungu','Pink'];
+
+let numPlayers=2, players=[], current=0, positions=[], isMoving=false, gameOver=false;
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTone(freq, dur, type='sine', vol=0.2, slideTo=null) {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g); g.connect(audioCtx.destination);
+  o.type = type;
+  o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  if (slideTo) o.frequency.linearRampToValueAtTime(slideTo, audioCtx.currentTime + dur);
+  g.gain.setValueAtTime(vol, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+  o.start(); o.stop(audioCtx.currentTime + dur);
+}
+
+function sfxDice() {
+  for (let i=0; i<6; i++) {
+    setTimeout(() => playTone(80 + Math.random()*120, 0.05, 'sawtooth', 0.12), i*50);
+  }
+}
+function sfxStep() { playTone(320, 0.07, 'triangle', 0.15); }
+function sfxLadder() { playTone(400, 0.35, 'sine', 0.22, 800); }
+function sfxSnake() { playTone(280, 0.4, 'sawtooth', 0.18, 120); }
+function sfxWin() {
+  [523,659,784,1047].forEach((f,i) => setTimeout(() => playTone(f, 0.2, 'sine', 0.2), i*90));
+}
+
+document.querySelectorAll('.p-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.p-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    numPlayers = +btn.dataset.n;
+  });
+});
+
+document.getElementById('startBtn').addEventListener('click', () => { initAudio(); startGame(); });
+document.getElementById('resetBtn').addEventListener('click', () => location.reload());
+document.getElementById('playAgain').addEventListener('click', () => location.reload());
+document.getElementById('rollBtn').addEventListener('click', rollDice);
+
+function startGame() {
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('game').style.display = 'flex';
+  players = []; positions = [];
+  for (let i=0; i<numPlayers; i++) {
+    players.push({id:i, name:NAMES[i], color:COLORS[i]});
+    positions.push(0);
+  }
+  current=0; gameOver=false; isMoving=false;
+  buildBoard(); updateUI(); setDice(1);
+}
+
+function buildBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  for (let row=9; row>=0; row--) {
+    for (let col=0; col<10; col++) {
+      let num = (row%2===0) ? row*10 + col +1 : row*10 + (9-col) +1;
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.num = num;
+      if ((row+col)%2===0) cell.classList.add('light');
+      if (num===100) cell.classList.add('end');
+      if (SNAKES[num]) cell.classList.add('snake-start');
+      if (LADDERS[num]) cell.classList.add('ladder-start');
+      cell.innerHTML = `<span>${num}</span>`;
+      if (SNAKES[num]) cell.innerHTML += `<span class="hint">🐍${SNAKES[num]}</span>`;
+      else if (LADDERS[num]) cell.innerHTML += `<span class="hint">🪜${LADDERS[num]}</span>`;
+      const tokensDiv = document.createElement('div');
+      tokensDiv.className = 'tokens';
+      tokensDiv.style.cssText = 'position:absolute;inset:0;';
+      cell.appendChild(tokensDiv);
+      board.appendChild(cell);
+    }
+  }
+  updateTokens();
+}
+
+function getCell(num) { return document.querySelector(`.cell[data-num="${num}"]`); }
+
+function updateTokens() {
+  document.querySelectorAll('.token').forEach(t => t.remove());
+  positions.forEach((pos, i) => {
+    if (pos === 0) return;
+    const cell = getCell(pos);
+    if (!cell) return;
+    const tokensDiv = cell.querySelector('.tokens');
+    const token = document.createElement('div');
+    token.className = `token p${i+1}`;
+    token.style.background = COLORS[i];
+    token.textContent = i+1;
+    const count = tokensDiv.children.length;
+    if (count===0) { token.style.top='12%'; token.style.left='12%'; }
+    else if (count===1) { token.style.top='12%'; token.style.right='12%'; token.style.left='auto'; }
+    else if (count===2) { token.style.bottom='12%'; token.style.left='12%'; token.style.top='auto'; }
+    else { token.style.bottom='12%'; token.style.right='12%'; token.style.top='auto'; token.style.left='auto'; }
+    tokensDiv.appendChild(token);
+  });
+}
+
+function setDice(n) {
+  const dots = document.querySelectorAll('.dice .dot');
+  const patterns = {1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+  dots.forEach((d,i) => d.classList.toggle('hide', !patterns[n].includes(i+1)));
+}
+
+function updateUI() {
+  const p = players[current];
+  document.getElementById('turnInfo').textContent = `Giliran: ${p.name}`;
+  document.getElementById('turnInfo').style.borderLeft = `4px solid ${p.color}`;
+  const bar = document.getElementById('playersBar');
+  bar.innerHTML = players.map((pl,i) => `
+    <div class="player-chip ${i===current?'active':''}">
+      <div class="dot-p" style="background:${pl.color}"></div>
+      ${pl.name}: ${positions[i]}
+    </div>`).join('');
+  document.getElementById('rollBtn').disabled = isMoving || gameOver;
+}
+
+async function rollDice() {
+  if (isMoving || gameOver) return;
+  initAudio();
+  isMoving = true;
+  document.getElementById('rollBtn').disabled = true;
+  
+  const diceEl = document.getElementById('dice');
+  diceEl.classList.add('rolling');
+  sfxDice();
+  
+  for (let i=0; i<10; i++) {
+    setDice(Math.floor(Math.random()*6)+1);
+    await sleep(70);
+  }
+  diceEl.classList.remove('rolling');
+  
+  const roll = Math.floor(Math.random()*6)+1;
+  setDice(roll);
+  await sleep(250);
+  
+  const from = positions[current];
+  let to = from + roll;
+  if (to > 100) to = 100 - (to - 100);
+  
+  for (let p = from+1; p <= to; p++) {
+    positions[current] = p;
+    updateTokens();
+    const cell = getCell(p);
+    if (cell) { cell.classList.add('highlight'); setTimeout(()=>cell.classList.remove('highlight'), 350); }
+    sfxStep();
+    await sleep(160);
+  }
+  
+  let final = positions[current];
+  if (LADDERS[final]) {
+    await sleep(180);
+    sfxLadder();
+    positions[current] = LADDERS[final];
+    updateTokens();
+    const t = document.querySelector(`.token.p${current+1}`);
+    if (t) { t.style.transform = 'scale(1.35)'; await sleep(220); t.style.transform = ''; }
+  } else if (SNAKES[final]) {
+    await sleep(180);
+    sfxSnake();
+    positions[current] = SNAKES[final];
+    updateTokens();
+    const t = document.querySelector(`.token.p${current+1}`);
+    if (t) { t.style.transform = 'scale(0.7)'; await sleep(220); t.style.transform = ''; }
+  }
+  
+  if (positions[current] === 100) {
+    gameOver = true;
+    sfxWin();
+    showWin();
+    isMoving = false;
+    updateUI();
+    return;
+  }
+  
+  current = (current + 1) % numPlayers;
+  isMoving = false;
+  updateUI();
+}
+
+function showWin() {
+  const p = players[current];
+  document.getElementById('winTitle').textContent = `🎉 ${p.name} Menang!`;
+  document.getElementById('winMsg').textContent = `Selamat! ${p.name} mencapai 100.`;
+  
+  const ranking = players.map((pl,i) => ({name:pl.name, color:pl.color, pos:positions[i], id:i}))
+    .sort((a,b) => b.pos - a.pos);
+  
+  const list = document.getElementById('statusList');
+  list.innerHTML = ranking.map((r, idx) => `
+    <div class="status-item">
+      <span class="rank">${idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':(idx+1)+'.'}</span>
+      <span style="color:${r.color};font-weight:700">${r.name}</span>
+      <span>Posisi ${r.pos}</span>
+    </div>`).join('');
+  
+  document.getElementById('winOverlay').classList.add('show');
+  confetti();
+}
+
+function confetti() {
+  const colors = ['#22d3ee','#a855f7','#f59e0b','#ec4899','#22c55e','#fbbf24'];
+  for (let i=0; i<70; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.width = (6+Math.random()*8) + 'px';
+    el.style.height = (6+Math.random()*8) + 'px';
+    el.style.animationDuration = (1.8 + Math.random()*2.2) + 's';
+    el.style.animationDelay = Math.random()*0.6 + 's';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4500);
+  }
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
