@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Edukasi • Irsam</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #00BFA5;
+    --orange: #FF6B35;
+    --purple: #7B2FBE;
+    --dark: #0B0E17;
+    --card: #1A1F1E;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', system-ui, sans-serif;
+    background: radial-gradient(ellipse at top, #1B2735 0%, #090A0F 70%);
+    color: #E0E3E2;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 40px;
+    overflow-x: hidden;
+  }
+  .sky {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
+  .star {
+    position: absolute; background: #fff; border-radius: 50%;
+    animation: twinkle var(--d) ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%,100% { opacity: .25; } 50% { opacity: 1; }
+  }
+  header {
+    position: relative; z-index: 1;
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(1.8rem, 6vw, 2.6rem);
+    background: linear-gradient(90deg, #00BFA5, #2196F3, #9C27B0, #FF6B35);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: spectrum 6s linear infinite;
+    margin-bottom: 6px;
+  }
+  @keyframes spectrum {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+  }
+  .tagline {
+    font-size: .95rem;
+    color: #899390;
+    font-weight: 600;
+  }
+  .games {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    width: 100%;
+    max-width: 520px;
+  }
+  @media (min-width: 640px) {
+    .games { grid-template-columns: 1fr 1fr; max-width: 780px; }
+  }
+  .card {
+    background: var(--card);
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid #2A302F;
+    box-shadow: 0 12px 40px rgba(0,0,0,.45);
+    transition: transform .25s cubic-bezier(.2,0,0,1), box-shadow .25s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 20px 50px rgba(0,0,0,.55);
+  }
+  .card-visual {
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .card.paud .card-visual {
+    background: linear-gradient(135deg, #87CEEB, #b0e4f7 40%, #c8f5c2);
+  }
+  .card.ular .card-visual {
+    background: linear-gradient(135deg, #0B0E17, #1B2735 60%, #00382F);
+  }
+  .card-body {
+    padding: 20px 18px 22px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .card h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.35rem;
+    margin-bottom: 6px;
+  }
+  .card.paud h2 { color: #FF6B35; }
+  .card.ular h2 { color: var(--teal); }
+  .card p {
+    font-size: .88rem;
+    color: #899390;
+    line-height: 1.45;
+    margin-bottom: 16px;
+    flex: 1;
+  }
+  .play-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 100px;
+    font-weight: 800;
+    font-size: .95rem;
+    border: none;
+    cursor: pointer;
+    transition: transform .15s;
+  }
+  .card.paud .play-btn {
+    background: linear-gradient(135deg, #FF6B35, #ff8c42);
+    color: #fff;
+  }
+  .card.ular .play-btn {
+    background: linear-gradient(135deg, #00BFA5, #00e5c0);
+    color: #00382F;
+  }
+  .play-btn:active { transform: scale(.96); }
+  footer {
+    position: relative; z-index: 1;
+    margin-top: 40px;
+    font-size: .8rem;
+    color: #5a6360;
+    text-align: center;
+  }
+  .badge {
+    display: inline-block;
+    font-size: .7rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .card.paud .badge {
+    background: rgba(255,107,53,.18);
+    color: #FF6B35;
+  }
+  .card.ular .badge {
+    background: rgba(0,191,165,.18);
+    color: #00BFA5;
+  }
+</style>
+</head>
+<body>
+  <div class="sky" id="sky"></div>
+
+  <header>
+    <h1>Game Edukasi</h1>
+    <p class="tagline">Belajar sambil bermain • dual mode seru</p>
+  </header>
+
+  <div class="games">
+    <!-- PAUD / Educational -->
+    <a class="card paud" href="https://irsamrhmtysf.github.io/game/" target="_blank" rel="noopener">
+      <div class="card-visual">🎓</div>
+      <div class="card-body">
+        <span class="badge">PAUD • Anak Usia Dini</span>
+        <h2>Belajar Yuk!</h2>
+        <p>Huruf, angka, bentuk, warna, hewan & buah. Level Mudah–Susah. Cocok untuk anak PAUD & TK.</p>
+        <span class="play-btn">Mainkan →</span>
+      </div>
+    </a>
+
+    <!-- Ular Tangga -->
+    <a class="card ular" href="https://irsamrhmtysf.github.io/game/ulartangga" target="_blank" rel="noopener">
+      <div class="card-visual">🐍🪜</div>
+      <div class="card-body">
+        <span class="badge">Board Game • 1–6 Pemain</span>
+        <h2>Ular Tangga Kehidupan</h2>
+        <p>Versi digital klasik dengan tema malam. Hold to roll, timer, ranking. Seru bareng keluarga!</p>
+        <span class="play-btn">Mainkan →</span>
+      </div>
+    </a>
+  </div>
+
+  <footer>
+    © 2026 • irsamrhmtysf.github.io
+  </footer>
+
+<script>
+  // Stars
+  const sky = document.getElementById('sky');
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.width = s.style.height = (Math.random() * 2 + 1) + 'px';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.setProperty('--d', (Math.random() * 3 + 2) + 's');
+    sky.appendChild(s);
+  }
+</script>
+</body>
+</html>
