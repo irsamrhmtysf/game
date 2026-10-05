@@ -26,9 +26,9 @@ body:before{
   transition:background .6s ease;
 }
 .scene-art{
-  position:fixed; inset:auto 0 0 0; height:42vh; z-index:0; pointer-events:none;
-  display:flex; align-items:flex-end; justify-content:center; font-size:8rem; opacity:.18;
-  filter:saturate(1.4); user-select:none;
+  position:fixed; inset:auto 0 0 0; height:28vh; z-index:0; pointer-events:none;
+  display:flex; align-items:flex-end; justify-content:center; font-size:6rem; opacity:.1;
+  filter:saturate(1.2); user-select:none;
 }
 .app{position:relative; z-index:1; width:min(560px,100%); margin:0 auto; padding:10px 12px 22px; display:flex; flex-direction:column; gap:10px}
 .brand{display:flex; justify-content:space-between; align-items:flex-end; gap:8px}
@@ -60,43 +60,41 @@ body:before{
 .mod.bad{color:#ffd0d6; border-color:rgba(255,93,115,.7); background:rgba(255,93,115,.16)}
 .mod.good{color:#d9ffe9; border-color:rgba(46,229,154,.7); background:rgba(46,229,154,.14)}
 .mod.info{color:#fff4cc; border-color:rgba(255,213,106,.65); background:rgba(255,213,106,.12)}
-.board-wrap{padding:8px; position:relative}
+.board-wrap{padding:8px}
 .board{
   display:grid; grid-template-columns:repeat(10,1fr); grid-template-rows:repeat(10,1fr);
   aspect-ratio:1; gap:2px; border-radius:14px; overflow:hidden;
-  background:#05070f; border:2px solid rgba(255,255,255,.18); position:relative;
+  background:#0a1020; border:1px solid rgba(255,255,255,.06);
 }
-.links{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:3}
-.cell{
-  position:relative; background:var(--cell); color:#d5def2; font-size:.46rem; font-weight:800;
-  padding:2px; text-shadow:0 1px 1px #000; border:1px solid rgba(255,255,255,.04);
-}
-.cell.alt{background:var(--cell2)}
-.cell.snake{background:linear-gradient(160deg,#8d2033,#3a1018); color:#fff; box-shadow:inset 0 0 0 2px var(--snake)}
-.cell.ladder{background:linear-gradient(160deg,#0f7a4d,#0c2e22); color:#fff; box-shadow:inset 0 0 0 2px var(--ladder)}
-.cell.goal{background:linear-gradient(160deg,#b8881d,#4a3408); color:#fff; box-shadow:inset 0 0 0 2px var(--goal)}
-.cell.trap{box-shadow:inset 0 0 0 2px #ff8a3d}
-.cell.star{box-shadow:inset 0 0 0 2px #ffe27a}
-.cell.gust{box-shadow:inset 0 0 0 2px #8ab4ff}
-.cell.portal{box-shadow:inset 0 0 0 2px #d18bff}
-.cell.pulse{outline:2px solid #fff; z-index:2}
+.cell{position:relative; background:#121a2e; color:#9aabca; font-size:.5rem; font-weight:700; padding:2px}
+.cell.alt{background:#17233c}
+.cell.snake{background:linear-gradient(160deg,#5a1d2a,#2a1018); color:#ffd0d6}
+.cell.ladder{background:linear-gradient(160deg,#14533a,#0d241c); color:#c8ffe4}
+.cell.goal{background:linear-gradient(160deg,#8a6a1d,#3a2a08); color:#fff4cc}
+.cell.trap{background:linear-gradient(160deg,#5a3414,#2a180c); color:#ffe0c2}
+.cell.star{background:linear-gradient(160deg,#3d3814,#221e0c); color:#fff4c2}
+.cell.gust{background:linear-gradient(160deg,#1a3058,#101c30); color:#d6e6ff}
+.cell.portal{background:linear-gradient(160deg,#3a2458,#1c1230); color:#edd6ff}
+.cell.pulse{outline:2px solid var(--accent); z-index:2}
 .cell.shake{animation:shake .35s linear}
-.cell.flash-up{animation:pop .4s ease}
-.cell.flash-down{animation:drop .4s ease}
-.hint{position:absolute; right:1px; bottom:0; font-size:.52rem; font-weight:900}
+.num{position:absolute; left:2px; top:1px; z-index:1; opacity:.9}
+.hint{position:absolute; right:1px; bottom:0; font-size:.52rem; font-weight:800; z-index:1}
 .token{
-  position:absolute; width:42%; height:42%; border-radius:50%; border:2px solid #fff;
-  display:flex; align-items:center; justify-content:center; font-size:.85rem;
-  box-shadow:0 3px 8px rgba(0,0,0,.5); z-index:5; transition:transform .18s cubic-bezier(.2,1.4,.3,1);
-  background:#111;
+  position:absolute; left:50%; top:54%; width:64%; height:64%;
+  transform:translate(-50%,-50%); border-radius:50%; border:2px solid #fff;
+  display:flex; align-items:center; justify-content:center; font-size:1.15rem; line-height:1;
+  box-shadow:0 3px 8px rgba(0,0,0,.45); z-index:5;
+  transition:transform .2s cubic-bezier(.2,1.35,.3,1);
 }
-.token.ai{box-shadow:0 0 0 2px var(--accent), 0 3px 8px rgba(0,0,0,.45)}
-.token.hop{transform:scale(1.35) translateY(-4px)}
+.token.ai{box-shadow:0 0 0 2px rgba(124,240,212,.7), 0 3px 8px rgba(0,0,0,.45)}
+.token.hop{transform:translate(-50%,-58%) scale(1.06)}
 .token.bump{animation:bump .45s ease}
 @keyframes shake{25%{transform:translate(-2px,1px)}75%{transform:translate(2px,-1px)}}
-@keyframes pop{0%{filter:brightness(1)}40%{filter:brightness(2.2)}100%{filter:brightness(1)}}
-@keyframes drop{0%{filter:brightness(1)}40%{filter:hue-rotate(20deg) brightness(1.6)}100%{filter:brightness(1)}}
-@keyframes bump{0%,100%{transform:scale(1)}30%{transform:scale(1.4) rotate(-12deg)}60%{transform:scale(.8) rotate(8deg)}}
+@keyframes bump{
+  0%,100%{transform:translate(-50%,-50%) scale(1)}
+  30%{transform:translate(-50%,-62%) scale(1.2) rotate(-8deg)}
+  60%{transform:translate(-50%,-50%) scale(.9) rotate(6deg)}
+}
 .play{display:grid; grid-template-columns:78px 1fr; gap:12px; align-items:center; padding:10px 12px 6px}
 .dice{
   width:72px; height:72px; border-radius:16px; background:#f7f8ff; display:grid;
@@ -280,8 +278,7 @@ function applyTheme(){
   const t=themeOf();
   const r=document.documentElement.style;
   r.setProperty('--glow1', t.glow1); r.setProperty('--glow2', t.glow2);
-  r.setProperty('--scene', t.scene); r.setProperty('--cell', t.cell); r.setProperty('--cell2', t.cell2);
-  r.setProperty('--snake', t.snake); r.setProperty('--ladder', t.ladder);
+  r.setProperty('--scene', t.scene);
   document.getElementById('sceneArt').textContent=t.art;
   document.getElementById('themeName').textContent=t.name+' · level '+level;
 }
@@ -418,30 +415,6 @@ function setDice(n){
   document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('hide', !map[n].includes(i+1)));
 }
 function cellOf(n){return document.querySelector(`.cell[data-n="${n}"]`)}
-function drawLinks(){
-  const old=document.querySelector('.links'); if(old) old.remove();
-  const board=document.getElementById('board');
-  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('class','links'); svg.setAttribute('viewBox','0 0 100 100');
-  const br=board.getBoundingClientRect();
-  const pt=n=>{
-    const c=cellOf(n); if(!c) return null;
-    const r=c.getBoundingClientRect();
-    return {x:(r.left-br.left+r.width/2)/br.width*100, y:(r.top-br.top+r.height/2)/br.height*100};
-  };
-  const line=(a,b,color)=>{
-    const A=pt(a), B=pt(b); if(!A||!B) return;
-    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-    const mx=(A.x+B.x)/2, my=(A.y+B.y)/2-6;
-    path.setAttribute('d',`M${A.x},${A.y} Q${mx},${my} ${B.x},${B.y}`);
-    path.setAttribute('fill','none'); path.setAttribute('stroke',color);
-    path.setAttribute('stroke-width','1.3'); path.setAttribute('stroke-linecap','round');
-    path.setAttribute('opacity','0.85'); svg.appendChild(path);
-  };
-  Object.entries(snakes).forEach(([a,b])=>line(+a,+b,'#ff5d73'));
-  Object.entries(ladders).forEach(([a,b])=>line(+a,+b,'#3dff9a'));
-  board.appendChild(svg);
-}
 function drawBoard(){
   const b=document.getElementById('board'); b.innerHTML='';
   for(let r=9;r>=0;r--) for(let c=0;c<10;c++){
@@ -462,11 +435,10 @@ function drawBoard(){
     else if(stars.has(num)) mark='<span class="hint">★</span>';
     else if(gusts.has(num)) mark='<span class="hint">💨</span>';
     else if(portals[num]) mark=`<span class="hint">◎${portals[num]}</span>`;
-    el.innerHTML=`<span>${num}</span>`+mark;
+    el.innerHTML=`<span class="num">${num}</span>`+mark;
     b.appendChild(el);
   }
   place();
-  requestAnimationFrame(drawLinks);
 }
 function place(){
   document.querySelectorAll('.token').forEach(t=>t.remove());
@@ -476,12 +448,6 @@ function place(){
     const t=document.createElement('div');
     t.className='token'+(players[i].ai?' ai':'');
     t.style.background=players[i].color; t.textContent=players[i].emo;
-    const k=cell.querySelectorAll('.token').length;
-    const spots=[['6%','6%'],['6%','auto'],['auto','6%'],['auto','auto']];
-    const s=spots[Math.min(k,3)];
-    t.style.top=s[0]; t.style.left=s[1];
-    if(s[1]==='auto') t.style.right='6%';
-    if(s[0]==='auto') t.style.bottom='6%';
     cell.appendChild(t);
     requestAnimationFrame(()=>t.classList.add('hop'));
   });
@@ -519,6 +485,7 @@ async function hopTo(n){
   const c=cellOf(n); if(c){ c.classList.add('pulse'); setTimeout(()=>c.classList.remove('pulse'),220); }
   sfx('step'); await sleep(95);
 }
+const pick=a=>a[Math.floor(Math.random()*a.length)];
 async function move(roll){
   moving=true; turns++; extra=false;
   const me=current;
@@ -534,11 +501,11 @@ async function move(roll){
   for(let s=startPos+1;s<=to;s++) await hopTo(s);
   let here=pos[me];
   if(ladders[here]){
-    sfx('up'); toast(players[me].name+' naik tangga ke '+ladders[here]);
+    sfx('up'); toast(pick(['Naik! Tangga baik hati.','Wah, rezeki tangga.','Lompat manis ke '+ladders[here]]));
     cellOf(here)?.classList.add('flash-up');
     pos[me]=ladders[here]; place(); await sleep(260); here=pos[me];
   } else if(snakes[here]){
-    sfx('down'); toast(players[me].name+' terkena ular ke '+snakes[here]);
+    sfx('down'); toast(pick(['Ularusss. Turun.','Kena ekor. Santai.','Sss, ular lapar.']));
     cellOf(here)?.classList.add('shake');
     pos[me]=snakes[here]; place(); await sleep(300); here=pos[me];
   }
@@ -555,13 +522,14 @@ async function move(roll){
   const occ=occupiedBy(pos[me], me);
   if(occ>=0 && pos[me]!==100){
     sfx('bump');
-    toast(players[me].emo+' terbentur '+players[occ].emo+'. Yang pertama tetap. Kembali.');
-    document.querySelector('.token')?.classList.add('bump');
-    pos[me]=startPos; place(); await sleep(280);
+    toast(players[me].emo+' mentok. Yang duluan tetap. Kamu balik.');
+    pos[me]=startPos; place();
+    cellOf(startPos)?.querySelector('.token')?.classList.add('bump'); await sleep(280);
     moving=false; advance(); return;
   }
-  if(stars.has(pos[me]) && pos[me]!==100){ extra=true; sfx('star'); toast(players[me].name+' dapat giliran lagi.'); }
-  if(traps.has(pos[me]) && pos[me]!==100){ skipNext.add(me); sfx('trap'); toast(players[me].name+' kena jebakan. Giliran berikutnya lewat.'); }
+  if(stars.has(pos[me]) && pos[me]!==100){ extra=true; sfx('star'); toast('Bintang. Giliran lagi!'); }
+  if(traps.has(pos[me]) && pos[me]!==100){ skipNext.add(me); sfx('trap'); toast('Jebakan. Giliran depan libur.'); }
+  if(pos[me]>88 && pos[me]<100) toast('Hampir. Jangan serakah.');
   if(pos[me]===100){ finish(); return; }
   moving=false; advance();
 }
@@ -612,7 +580,7 @@ dice.addEventListener('pointerdown', e=>{
 function release(){
   if(!holding) return; holding=false; dice.classList.remove('hold'); clearInterval(holdTimer);
   const roll=rollFor(false); setDice(roll);
-  document.getElementById('hint').textContent='Hasil '+roll;
+  document.getElementById('hint').textContent='Hasil '+roll+(roll===6?' · enam, langkah besar':'');
   move(roll);
 }
 dice.addEventListener('pointerup', release);
@@ -650,7 +618,6 @@ document.getElementById('nextBtn').onclick=()=>{ document.getElementById('end').
 document.getElementById('menuBtn').onclick=()=>{ document.getElementById('end').classList.add('hidden'); document.getElementById('welcome').classList.remove('hidden'); paintSetup(); };
 document.getElementById('resetBtn').onclick=()=>{ clearInterval(timer); over=true; moving=false; document.getElementById('welcome').classList.remove('hidden'); paintSetup(); };
 document.getElementById('muteBtn').onclick=()=>{ muted=!muted; document.getElementById('muteBtn').textContent=muted?'Mati':'Suara'; };
-window.addEventListener('resize', ()=>{ if(players.length) drawLinks(); });
 applyTheme(); paintSetup(); document.getElementById('lvlNum').textContent=level;
 </script>
 </body>
