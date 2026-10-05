@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ular Tangga Kehidupan</title>
+<style>
+:root{
+  --bg:#070b14; --surface:rgba(16,22,38,.78); --line:rgba(255,255,255,.1);
+  --text:#eef3ff; --muted:#9aa6c2; --accent:#7cf0d4; --accent2:#8ab4ff;
+  --gold:#f5c15a; --danger:#ff6b7a; --good:#5ee0a0;
+  --p1:#4ea2ff; --p2:#ffb020; --p3:#c084fc; --p4:#ff6b9d; --p5:#3dd68c; --p6:#2ee6e6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Segoe UI",system-ui,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(900px 500px at 20% -10%, rgba(90,120,255,.22), transparent 55%),
+    radial-gradient(700px 420px at 100% 0%, rgba(80,220,190,.12), transparent 50%),
+    linear-gradient(180deg,#0c1224 0%, #070b14 100%);
+  min-height:100dvh; display:flex; flex-direction:column; align-items:center;
+  padding:10px 12px 16px; overflow-x:hidden;
+}
+.sky{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.star{position:absolute;background:#fff;border-radius:50%;opacity:.55;animation:twinkle var(--d) ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.2}50%{opacity:1}}
+.fall{position:absolute;width:2px;height:70px;background:linear-gradient(#fff,transparent);border-radius:2px;animation:shoot linear forwards;opacity:.8}
+@keyframes shoot{to{transform:translate(80px,100vh);opacity:0}}
+
+.app{position:relative;z-index:1;width:min(520px,100%);display:flex;flex-direction:column;gap:10px}
+.brand{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.brand h1{font-size:1.35rem;letter-spacing:-.4px;font-weight:750}
+.brand h1 span{color:var(--accent)}
+.brand p{color:var(--muted);font-size:.75rem;margin-top:2px}
+.lvl{
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
+  border:1px solid var(--line); border-radius:14px; padding:8px 12px; text-align:right; min-width:92px;
+}
+.lvl b{display:block;font-size:1.15rem;color:var(--gold)}
+.lvl small{color:var(--muted);font-size:.68rem}
+
+.panel{
+  background:var(--surface); border:1px solid var(--line); border-radius:18px;
+  backdrop-filter:blur(14px); box-shadow:0 18px 40px rgba(0,0,0,.28);
+}
+.top{display:flex;gap:8px;align-items:center;padding:10px 12px}
+.turn{flex:1;font-weight:650;font-size:.92rem}
+.meta{color:var(--gold);font-variant-numeric:tabular-nums;font-size:.85rem}
+.ghost{border:0;background:rgba(255,255,255,.06);color:var(--muted);border-radius:12px;padding:8px 10px;cursor:pointer}
+
+.board-wrap{padding:8px}
+.board{
+  display:grid;grid-template-columns:repeat(10,1fr);grid-template-rows:repeat(10,1fr);
+  aspect-ratio:1; gap:2px; border-radius:14px; overflow:hidden;
+  background:#0a1020; border:1px solid rgba(255,255,255,.06);
+}
+.cell{position:relative;background:#121a2e;color:#7d8aab;font-size:.48rem;font-weight:700;padding:2px}
+.cell.alt{background:#17233c}
+.cell.snake{background:linear-gradient(160deg,#5a1d2a,#2a1018);color:#ffd0d6}
+.cell.ladder{background:linear-gradient(160deg,#14533a,#0d241c);color:#c8ffe4}
+.cell.goal{background:linear-gradient(160deg,#8a6a1d,#3a2a08);color:#fff4cc}
+.cell.pulse{outline:2px solid var(--accent);z-index:2}
+.hint{position:absolute;right:1px;bottom:0;font-size:.55rem}
+.token{
+  position:absolute;width:30%;height:30%;border-radius:50%;border:2px solid #fff;
+  display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:800;color:#fff;
+  box-shadow:0 3px 8px rgba(0,0,0,.45);z-index:5;transition:transform .22s cubic-bezier(.2,1.2,.3,1);
+}
+.token.ai{box-shadow:0 0 0 2px rgba(124,240,212,.5), 0 3px 8px rgba(0,0,0,.45)}
+.token.bounce{transform:scale(1.28)}
+
+.play{display:grid;grid-template-columns:78px 1fr;gap:12px;align-items:center;padding:12px}
+.dice{
+  width:72px;height:72px;border-radius:16px;background:#f7f8ff;display:grid;grid-template-columns:repeat(3,1fr);padding:9px;
+  cursor:pointer;user-select:none;box-shadow:0 8px 20px rgba(0,0,0,.35);
+}
+.dice.hold{animation:shake .08s linear infinite}
+@keyframes shake{25%{transform:translate(-2px,1px) rotate(-6deg)}75%{transform:translate(2px,-1px) rotate(5deg)}}
+.dot{width:11px;height:11px;border-radius:50%;background:#171b2b;margin:auto}
+.dot.hide{visibility:hidden}
+.side{display:flex;flex-direction:column;gap:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.05);border:1px solid transparent;border-radius:999px;padding:5px 9px;font-size:.75rem}
+.chip.on{border-color:var(--accent)}
+.dotc{width:10px;height:10px;border-radius:50%;border:1.5px solid #fff}
+.hintline{color:var(--muted);font-size:.72rem}
+.quote{color:var(--muted);font-size:.72rem;padding:0 12px 12px;font-style:italic}
+
+.overlay{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(5,8,16,.82);padding:16px}
+.card{
+  width:min(380px,100%);background:#12192c;border-radius:24px;padding:22px 18px 18px;position:relative;
+  box-shadow:0 24px 60px rgba(0,0,0,.45);
+}
+.card:before{
+  content:"";position:absolute;inset:-2px;border-radius:26px;z-index:-1;
+  background:linear-gradient(120deg,#7cf0d4,#8ab4ff,#c084fc,#f5c15a,#7cf0d4);background-size:240% 240%;
+  animation:spec 5s linear infinite;
+}
+@keyframes spec{to{background-position:240% 0}}
+.card h2{font-size:1.35rem;text-align:center}
+.card .slogan{text-align:center;color:var(--muted);font-size:.82rem;margin:4px 0 14px}
+.sec{font-size:.78rem;color:var(--muted);margin:8px 0 6px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pbtn,.go{
+  border:0;border-radius:12px;background:#1c2742;color:var(--text);padding:11px 0;font-weight:650;cursor:pointer;
+}
+.pbtn.on{background:var(--accent);color:#06241d}
+.names{display:flex;flex-direction:column;gap:6px;max-height:150px;overflow:auto;margin-bottom:12px}
+.names input{
+  width:100%;border:1px solid var(--line);background:#0e1528;color:var(--text);
+  border-radius:12px;padding:10px 12px;font-size:.9rem;outline:none;
+}
+.go{width:100%;border-radius:999px;background:linear-gradient(90deg,#7cf0d4,#8ab4ff);color:#07131a;padding:13px;margin-top:4px}
+.rank{background:#0e1528;border-radius:14px;padding:8px 10px;margin:10px 0 14px}
+.rank div{display:flex;justify-content:space-between;padding:6px 2px;border-bottom:1px solid rgba(255,255,255,.05);font-size:.86rem}
+.rank div:last-child{border:0}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="sky" id="sky"></div>
+<div class="app">
+  <div class="brand">
+    <div>
+      <h1>Ular Tangga <span>Kehidupan</span></h1>
+      <p>Oktober · serius, tetap riang</p>
+    </div>
+    <div class="lvl"><small>LEVEL</small><b id="lvlNum">1</b></div>
+  </div>
+
+  <div class="panel" id="stage">
+    <div class="top">
+      <div class="turn" id="turnInfo">Siap main</div>
+      <div class="meta" id="timer">00:00</div>
+      <button class="ghost" id="resetBtn">Reset</button>
+    </div>
+    <div class="board-wrap"><div class="board" id="board"></div></div>
+    <div class="play">
+      <div class="dice" id="dice">
+        <div class="dot" data-i="1"></div><div class="dot" data-i="2"></div><div class="dot" data-i="3"></div>
+        <div class="dot" data-i="4"></div><div class="dot" data-i="5"></div><div class="dot" data-i="6"></div>
+        <div class="dot" data-i="7"></div><div class="dot" data-i="8"></div><div class="dot" data-i="9"></div>
+      </div>
+      <div class="side">
+        <div class="chips" id="chips"></div>
+        <div class="hintline" id="hint">Tahan dadu, lepas untuk lempar.</div>
+      </div>
+    </div>
+    <div class="quote" id="quote">Setiap langkah adalah pilihan. Tangga menaikkan, ular menguji.</div>
+  </div>
+</div>
+
+<div class="overlay" id="welcome">
+  <div class="card">
+    <h2>Ular Tangga Kehidupan</h2>
+    <p class="slogan">Permainan dan Senda Gurau · Level tanpa batas</p>
+    <div class="sec">Jumlah pemain</div>
+    <div class="grid3" id="picks">
+      <button class="pbtn on" data-n="1">1</button>
+      <button class="pbtn" data-n="2">2</button>
+      <button class="pbtn" data-n="3">3</button>
+      <button class="pbtn" data-n="4">4</button>
+      <button class="pbtn" data-n="5">5</button>
+      <button class="pbtn" data-n="6">6</button>
+    </div>
+    <div class="sec">Nama opsional · 1 pemain lawan AI Nasib</div>
+    <div class="names" id="names"></div>
+    <button class="go" id="startBtn">Mulai Level</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="end">
+  <div class="card">
+    <h2 id="endTitle">Selesai</h2>
+    <p class="slogan" id="endMsg"></p>
+    <div class="rank" id="rank"></div>
+    <button class="go" id="nextBtn">Level Berikutnya</button>
+  </div>
+</div>
+
+<script>
+const BASE_L = {1:38,4:14,9:31,21:42,28:84,36:44,51:67,71:91,80:100};
+const BASE_S = {16:6,47:26,49:11,56:53,62:19,64:60,87:24,93:73,95:75,98:78};
+const COLORS = ['#4ea2ff','#ffb020','#c084fc','#ff6b9d','#3dd68c','#2ee6e6'];
+const NAMES = ['Kamu','Teman','Ungu','Pink','Hijau','Cyan'];
+const QUOTES = [
+  'Cepat menang bukan akhir. Hidup menaikkan taruhannya.',
+  'Ular bukan hukuman. Ia mengingatkan langkah yang terburu.',
+  'Tangga datang pada yang tetap jalan, bukan yang hanya beruntung.',
+  'Level naik saat kamu terlalu ringan melewatinya.',
+  'Serius dalam langkah, riang dalam jatuh dan bangkit.'
+];
+let level = +(localStorage.getItem('utk_level')||1);
+let players=[], pos=[], current=0, moving=false, over=false, humans=1, vsAI=true;
+let ladders={}, snakes={}, startAt=0, timer=null, holding=false, holdTimer=null, turns=0, audio=null;
+
+function sky(){
+  const s=document.getElementById('sky');
+  for(let i=0;i<50;i++){
+    const e=document.createElement('div'); e.className='star';
+    e.style.left=Math.random()*100+'%'; e.style.top=Math.random()*100+'%';
+    const z=1+Math.random()*1.8; e.style.width=e.style.height=z+'px';
+    e.style.setProperty('--d',(2+Math.random()*4)+'s'); s.appendChild(e);
+  }
+  setInterval(()=>{
+    const f=document.createElement('div'); f.className='fall';
+    f.style.left=Math.random()*90+'%'; f.style.top='-8%';
+    f.style.animationDuration=(1.4+Math.random()*1.6)+'s';
+    s.appendChild(f); setTimeout(()=>f.remove(),3400);
+  },900);
+}
+function tone(f,d,type='sine',v=.14,to){
+  if(!audio) return;
+  const o=audio.createOscillator(), g=audio.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,audio.currentTime);
+  if(to) o.frequency.linearRampToValueAtTime(to,audio.currentTime+d);
+  g.gain.setValueAtTime(v,audio.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);
+  o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime+d);
+}
+function melody(){ [[262,.18],[330,.18],[392,.2],[523,.32]].forEach(([f,d],i)=>setTimeout(()=>tone(f,d),i*180)); }
+function sfx(kind){
+  if(kind==='hold') tone(80+Math.random()*90,.03,'sawtooth',.07);
+  if(kind==='step') tone(310,.05,'triangle',.1);
+  if(kind==='up') tone(380,.28,'sine',.16,760);
+  if(kind==='down') tone(240,.32,'sawtooth',.12,90);
+  if(kind==='win') [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.14),i*70));
+}
+
+function buildBoardRules(){
+  ladders={...BASE_L}; snakes={...BASE_S};
+  const extra = Math.min(8, Math.floor((level-1)/2));
+  const cut = Math.min(4, Math.floor((level-1)/3));
+  Object.keys(ladders).slice(-cut).forEach(k=>delete ladders[k]);
+  const used=new Set([...Object.keys(ladders),...Object.values(ladders),...Object.keys(snakes),...Object.values(snakes),100]);
+  let added=0, guard=0;
+  while(added<extra && guard<200){
+    guard++;
+    const from=8+Math.floor(Math.random()*80);
+    const drop=4+Math.floor(Math.random()*(6+level));
+    const to=Math.max(2, from-drop);
+    if(used.has(from)||used.has(to)||from===to) continue;
+    snakes[from]=to; used.add(from); used.add(to); added++;
+  }
+}
+function aiBias(){ return Math.min(.42, .06 + level*0.018); }
+function rollFor(isAI){
+  if(!isAI) return 1+Math.floor(Math.random()*6);
+  const b=aiBias();
+  if(Math.random()<b) return 4+Math.floor(Math.random()*3);
+  return 1+Math.floor(Math.random()*6);
+}
+
+function paintNames(){
+  const box=document.getElementById('names'); box.innerHTML='';
+  const n=+document.querySelector('.pbtn.on').dataset.n;
+  for(let i=0;i<n;i++){
+    const inp=document.createElement('input');
+    inp.maxLength=14; inp.value = i===0 && n===1 ? 'Kamu' : (NAMES[i]||('Pemain '+(i+1)));
+    box.appendChild(inp);
+  }
+}
+document.getElementById('picks').onclick=e=>{
+  const b=e.target.closest('.pbtn'); if(!b) return;
+  document.querySelectorAll('.pbtn').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); paintNames();
+};
+function setDice(n){
+  const map={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('hide', !map[n].includes(i+1)));
+}
+function cellOf(n){return document.querySelector(`.cell[data-n="${n}"]`)}
+function drawBoard(){
+  const b=document.getElementById('board'); b.innerHTML='';
+  for(let r=9;r>=0;r--) for(let c=0;c<10;c++){
+    const num=r%2===0 ? r*10+c+1 : r*10+(9-c)+1;
+    const el=document.createElement('div'); el.className='cell'; el.dataset.n=num;
+    if((r+c)%2===0) el.classList.add('alt');
+    if(num===100) el.classList.add('goal');
+    if(snakes[num]) el.classList.add('snake');
+    if(ladders[num]) el.classList.add('ladder');
+    el.innerHTML=`<span>${num}</span>`+(snakes[num]?`<span class="hint">↓${snakes[num]}</span>`:ladders[num]?`<span class="hint">↑${ladders[num]}</span>`:'');
+    const slot=document.createElement('div'); slot.style.cssText='position:absolute;inset:0'; el.appendChild(slot);
+    b.appendChild(el);
+  }
+  place();
+}
+function place(){
+  document.querySelectorAll('.token').forEach(t=>t.remove());
+  pos.forEach((p,i)=>{
+    if(!p) return;
+    const cell=cellOf(p); if(!cell) return;
+    const t=document.createElement('div');
+    t.className='token'+(players[i].ai?' ai':'');
+    t.style.background=players[i].color; t.textContent=i+1;
+    const k=cell.querySelectorAll('.token').length;
+    const spots=[['8%','8%'],['8%','auto'],['auto','8%'],['auto','auto'],['28%','28%'],['28%','auto']];
+    t.style.top=spots[k][0]; t.style.left=spots[k][1];
+    if(spots[k][1]==='auto') t.style.right='8%';
+    if(spots[k][0]==='auto') t.style.bottom='8%';
+    cell.appendChild(t);
+  });
+}
+function ui(){
+  document.getElementById('lvlNum').textContent=level;
+  if(!players.length) return;
+  const p=players[current];
+  document.getElementById('turnInfo').textContent = over ? 'Selesai' : (p.ai ? 'Giliran AI Nasib' : 'Giliran '+p.name);
+  document.getElementById('turnInfo').style.borderLeft='4px solid '+p.color;
+  document.getElementById('chips').innerHTML=players.map((pl,i)=>`<div class="chip ${i===current?'on':''}"><i class="dotc" style="background:${pl.color}"></i>${pl.name} ${pos[i]}</div>`).join('');
+  document.getElementById('quote').textContent=QUOTES[(level-1)%QUOTES.length];
+}
+function tick(){
+  const s=Math.floor((Date.now()-startAt)/1000);
+  document.getElementById('timer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+async function move(roll){
+  moving=true; turns++;
+  let from=pos[current], to=from+roll;
+  if(to>100) to=100-(to-100);
+  for(let s=from+1;s<=to;s++){
+    pos[current]=s; place();
+    const c=cellOf(s); if(c){c.classList.add('pulse'); setTimeout(()=>c.classList.remove('pulse'),240)}
+    sfx('step'); await sleep(110);
+  }
+  const here=pos[current];
+  if(ladders[here]){ sfx('up'); pos[current]=ladders[here]; place(); await sleep(220); }
+  else if(snakes[here]){ sfx('down'); pos[current]=snakes[here]; place(); await sleep(220); }
+  if(pos[current]===100){ finish(); return; }
+  current=(current+1)%players.length;
+  moving=false; ui();
+  if(players[current].ai && !over) setTimeout(aiTurn, 480);
+}
+async function aiTurn(){
+  if(over||moving) return;
+  const roll=rollFor(true);
+  setDice(roll); sfx('hold');
+  document.getElementById('hint').textContent='AI Nasib melempar '+roll+' · bias '+Math.round(aiBias()*100)+'%';
+  await sleep(420); await move(roll);
+}
+function finish(){
+  over=true; moving=false; clearInterval(timer); sfx('win');
+  const secs=Math.floor((Date.now()-startAt)/1000);
+  const winner=players[current];
+  const humanWin=!winner.ai;
+  let jump=1;
+  if(humanWin){
+    if(turns<=14 || secs<=45) jump=3;
+    else if(turns<=22 || secs<=80) jump=2;
+    level += jump;
+    localStorage.setItem('utk_level', level);
+  }
+  document.getElementById('endTitle').textContent = humanWin ? winner.name+' naik level' : 'AI Nasib menang';
+  document.getElementById('endMsg').textContent = humanWin
+    ? `Selesai ${turns} giliran · ${document.getElementById('timer').textContent}. Level berikutnya +${jump}.`
+    : 'Nasib lebih dulu. Level tetap. Coba lagi, lebih tenang.';
+  const rank=players.map((p,i)=>({...p,pos:pos[i]})).sort((a,b)=>b.pos-a.pos);
+  document.getElementById('rank').innerHTML=rank.map((r,i)=>`<div><span>${i+1}. <b style="color:${r.color}">${r.name}</b></span><span>${r.pos}</span></div>`).join('');
+  document.getElementById('nextBtn').textContent = humanWin ? 'Level '+level : 'Ulangi Level '+level;
+  document.getElementById('end').classList.remove('hidden');
+  ui();
+}
+
+const dice=document.getElementById('dice');
+dice.addEventListener('pointerdown', e=>{
+  if(moving||over||holding||!document.getElementById('welcome').classList.contains('hidden')) return;
+  if(players[current]?.ai) return;
+  e.preventDefault(); holding=true; dice.classList.add('hold');
+  document.getElementById('hint').textContent='Lepas untuk berhenti...';
+  holdTimer=setInterval(()=>{ setDice(1+Math.floor(Math.random()*6)); sfx('hold'); },55);
+});
+function release(){
+  if(!holding) return; holding=false; dice.classList.remove('hold'); clearInterval(holdTimer);
+  const roll=rollFor(false); setDice(roll);
+  document.getElementById('hint').textContent='Hasil '+roll;
+  move(roll);
+}
+dice.addEventListener('pointerup', release);
+dice.addEventListener('pointerleave', release);
+dice.addEventListener('pointercancel', release);
+
+function begin(){
+  document.getElementById('welcome').classList.add('hidden');
+  document.getElementById('end').classList.add('hidden');
+  humans=+document.querySelector('.pbtn.on').dataset.n;
+  vsAI = humans===1;
+  const inputs=[...document.querySelectorAll('#names input')];
+  players=[]; pos=[];
+  for(let i=0;i<humans;i++){
+    players.push({name:(inputs[i]?.value.trim())||NAMES[i], color:COLORS[i], ai:false});
+    pos.push(0);
+  }
+  if(vsAI){ players.push({name:'AI Nasib', color:'#7cf0d4', ai:true}); pos.push(0); }
+  current=0; moving=false; over=false; turns=0;
+  buildBoardRules(); drawBoard(); setDice(1); ui();
+  startAt=Date.now(); clearInterval(timer); timer=setInterval(tick,1000); tick();
+  document.getElementById('hint').textContent='Tahan dadu, lepas untuk lempar. Level '+level+' · ular +'+Math.min(8,Math.floor((level-1)/2));
+}
+document.getElementById('startBtn').onclick=()=>{ audio=audio||new (window.AudioContext||window.webkitAudioContext)(); audio.resume(); melody(); setTimeout(begin,700); };
+document.getElementById('nextBtn').onclick=()=>{ document.getElementById('end').classList.add('hidden'); begin(); };
+document.getElementById('resetBtn').onclick=()=>location.reload();
+
+sky(); paintNames(); buildBoardRules(); drawBoard(); setDice(1);
+document.getElementById('lvlNum').textContent=level;
+</script>
+</body>
+</html>
