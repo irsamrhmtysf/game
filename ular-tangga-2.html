@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ular Tangga 2.0</title>
+<style>
+:root{
+  --bg:#070b14; --surface:rgba(10,14,28,.82); --line:rgba(255,255,255,.16);
+  --text:#f4f7ff; --muted:#b7c3de; --accent:#7cf0d4; --gold:#ffd56a;
+  --danger:#ff5d73; --good:#3dff9a; --ink:#071018;
+  --cell:#162033; --cell2:#1c2a44; --snake:#ff4d6a; --ladder:#2ee59a; --goal:#ffd56a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Segoe UI",system-ui,sans-serif; color:var(--text);
+  background:var(--bg); min-height:100dvh; overflow-x:hidden;
+}
+body:before{
+  content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 12% -10%, var(--glow1,rgba(90,140,255,.35)), transparent 55%),
+    radial-gradient(700px 480px at 100% 0%, var(--glow2,rgba(80,220,190,.2)), transparent 50%),
+    var(--scene,linear-gradient(180deg,#10182e,#070b14));
+  transition:background .6s ease;
+}
+.scene-art{
+  position:fixed; inset:auto 0 0 0; height:42vh; z-index:0; pointer-events:none;
+  display:flex; align-items:flex-end; justify-content:center; font-size:8rem; opacity:.18;
+  filter:saturate(1.4); user-select:none;
+}
+.app{position:relative; z-index:1; width:min(560px,100%); margin:0 auto; padding:10px 12px 22px; display:flex; flex-direction:column; gap:10px}
+.brand{display:flex; justify-content:space-between; align-items:flex-end; gap:8px}
+.brand h1{font-size:1.28rem; letter-spacing:-.4px; font-weight:800}
+.brand h1 span{color:var(--accent)}
+.brand p{color:var(--muted); font-size:.72rem; margin-top:2px}
+.lvl{
+  background:rgba(0,0,0,.35); border:1px solid var(--line); border-radius:14px;
+  padding:7px 10px; text-align:right; min-width:108px;
+}
+.lvl b{display:block; font-size:1.05rem; color:var(--gold)}
+.lvl small{color:var(--muted); font-size:.66rem; letter-spacing:.4px}
+.panel{
+  background:var(--surface); border:1px solid var(--line); border-radius:18px;
+  backdrop-filter:blur(16px); box-shadow:0 18px 40px rgba(0,0,0,.35);
+}
+.top{display:flex; gap:8px; align-items:center; padding:10px 12px}
+.turn{flex:1; font-weight:750; font-size:.92rem; border-left:5px solid var(--accent); padding-left:8px}
+.meta{color:var(--gold); font-variant-numeric:tabular-nums; font-size:.85rem}
+.ghost{
+  border:1px solid var(--line); background:rgba(255,255,255,.08); color:var(--text);
+  border-radius:12px; padding:8px 10px; cursor:pointer; font-weight:700;
+}
+.mods{display:flex; gap:6px; overflow:auto; padding:0 12px 8px}
+.mod{
+  flex:0 0 auto; font-size:.68rem; font-weight:800; letter-spacing:.2px;
+  border-radius:999px; padding:4px 8px; border:1px solid var(--line); background:rgba(0,0,0,.28);
+}
+.mod.bad{color:#ffd0d6; border-color:rgba(255,93,115,.7); background:rgba(255,93,115,.16)}
+.mod.good{color:#d9ffe9; border-color:rgba(46,229,154,.7); background:rgba(46,229,154,.14)}
+.mod.info{color:#fff4cc; border-color:rgba(255,213,106,.65); background:rgba(255,213,106,.12)}
+.board-wrap{padding:8px; position:relative}
+.board{
+  display:grid; grid-template-columns:repeat(10,1fr); grid-template-rows:repeat(10,1fr);
+  aspect-ratio:1; gap:2px; border-radius:14px; overflow:hidden;
+  background:#05070f; border:2px solid rgba(255,255,255,.18); position:relative;
+}
+.links{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:3}
+.cell{
+  position:relative; background:var(--cell); color:#d5def2; font-size:.46rem; font-weight:800;
+  padding:2px; text-shadow:0 1px 1px #000; border:1px solid rgba(255,255,255,.04);
+}
+.cell.alt{background:var(--cell2)}
+.cell.snake{background:linear-gradient(160deg,#8d2033,#3a1018); color:#fff; box-shadow:inset 0 0 0 2px var(--snake)}
+.cell.ladder{background:linear-gradient(160deg,#0f7a4d,#0c2e22); color:#fff; box-shadow:inset 0 0 0 2px var(--ladder)}
+.cell.goal{background:linear-gradient(160deg,#b8881d,#4a3408); color:#fff; box-shadow:inset 0 0 0 2px var(--goal)}
+.cell.trap{box-shadow:inset 0 0 0 2px #ff8a3d}
+.cell.star{box-shadow:inset 0 0 0 2px #ffe27a}
+.cell.gust{box-shadow:inset 0 0 0 2px #8ab4ff}
+.cell.portal{box-shadow:inset 0 0 0 2px #d18bff}
+.cell.pulse{outline:2px solid #fff; z-index:2}
+.cell.shake{animation:shake .35s linear}
+.cell.flash-up{animation:pop .4s ease}
+.cell.flash-down{animation:drop .4s ease}
+.hint{position:absolute; right:1px; bottom:0; font-size:.52rem; font-weight:900}
+.token{
+  position:absolute; width:42%; height:42%; border-radius:50%; border:2px solid #fff;
+  display:flex; align-items:center; justify-content:center; font-size:.85rem;
+  box-shadow:0 3px 8px rgba(0,0,0,.5); z-index:5; transition:transform .18s cubic-bezier(.2,1.4,.3,1);
+  background:#111;
+}
+.token.ai{box-shadow:0 0 0 2px var(--accent), 0 3px 8px rgba(0,0,0,.45)}
+.token.hop{transform:scale(1.35) translateY(-4px)}
+.token.bump{animation:bump .45s ease}
+@keyframes shake{25%{transform:translate(-2px,1px)}75%{transform:translate(2px,-1px)}}
+@keyframes pop{0%{filter:brightness(1)}40%{filter:brightness(2.2)}100%{filter:brightness(1)}}
+@keyframes drop{0%{filter:brightness(1)}40%{filter:hue-rotate(20deg) brightness(1.6)}100%{filter:brightness(1)}}
+@keyframes bump{0%,100%{transform:scale(1)}30%{transform:scale(1.4) rotate(-12deg)}60%{transform:scale(.8) rotate(8deg)}}
+.play{display:grid; grid-template-columns:78px 1fr; gap:12px; align-items:center; padding:10px 12px 6px}
+.dice{
+  width:72px; height:72px; border-radius:16px; background:#f7f8ff; display:grid;
+  grid-template-columns:repeat(3,1fr); padding:9px; cursor:pointer; user-select:none;
+  box-shadow:0 8px 20px rgba(0,0,0,.35); touch-action:none;
+}
+.dice.hold{animation:shake .08s linear infinite}
+.dot{width:11px; height:11px; border-radius:50%; background:#171b2b; margin:auto}
+.dot.hide{visibility:hidden}
+.side{display:flex; flex-direction:column; gap:6px; min-width:0}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{
+  display:flex; align-items:center; gap:6px; background:rgba(0,0,0,.28);
+  border:2px solid transparent; border-radius:999px; padding:4px 8px; font-size:.74rem; font-weight:750;
+}
+.chip.on{border-color:#fff; background:rgba(255,255,255,.1)}
+.emo{font-size:.95rem}
+.hintline{color:var(--text); font-size:.74rem; font-weight:650}
+.quote{color:var(--muted); font-size:.72rem; padding:0 12px 12px; font-style:italic}
+.toast{
+  position:fixed; left:50%; bottom:18px; transform:translateX(-50%) translateY(20px);
+  background:#111827; color:#fff; border:2px solid var(--gold); border-radius:999px;
+  padding:8px 14px; font-size:.8rem; font-weight:800; z-index:30; opacity:0; pointer-events:none;
+  transition:.25s ease; max-width:92vw; text-align:center;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+.overlay{position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; background:rgba(5,8,16,.84); padding:14px}
+.card{
+  width:min(420px,100%); background:#12192c; border-radius:24px; padding:18px 16px 16px; position:relative;
+  box-shadow:0 24px 60px rgba(0,0,0,.5); max-height:92dvh; overflow:auto;
+}
+.card:before{
+  content:""; position:absolute; inset:-2px; border-radius:26px; z-index:-1;
+  background:linear-gradient(120deg,#7cf0d4,#8ab4ff,#c084fc,#f5c15a,#ff6b9d,#7cf0d4);
+  background-size:240% 240%; animation:spec 6s linear infinite;
+}
+@keyframes spec{to{background-position:240% 0}}
+.card h2{font-size:1.3rem; text-align:center}
+.card .slogan{text-align:center; color:var(--muted); font-size:.8rem; margin:4px 0 12px}
+.sec{font-size:.75rem; color:var(--muted); margin:8px 0 6px; font-weight:700}
+.modes,.grid3{display:grid; gap:8px}
+.modes{grid-template-columns:repeat(3,1fr)}
+.grid3{grid-template-columns:repeat(3,1fr)}
+.pbtn,.go,.ebtn{
+  border:0; border-radius:12px; background:#1c2742; color:var(--text); padding:11px 6px; font-weight:750; cursor:pointer;
+}
+.pbtn.on{background:var(--accent); color:#06241d}
+.names{display:flex; flex-direction:column; gap:6px; margin-bottom:8px}
+.row{display:grid; grid-template-columns:46px 1fr; gap:6px}
+.row input,select{
+  width:100%; border:1px solid var(--line); background:#0e1528; color:var(--text);
+  border-radius:12px; padding:10px 12px; font-size:.9rem; outline:none;
+}
+.ebtn{font-size:1.25rem; padding:6px 0}
+.go{width:100%; border-radius:999px; background:linear-gradient(90deg,#7cf0d4,#8ab4ff); color:#07131a; padding:13px; margin-top:6px}
+.rank{background:#0e1528; border-radius:14px; padding:8px 10px; margin:10px 0 12px}
+.rank div{display:flex; justify-content:space-between; padding:6px 2px; border-bottom:1px solid rgba(255,255,255,.06); font-size:.86rem}
+.rank div:last-child{border:0}
+.hidden{display:none!important}
+.picker{
+  position:fixed; left:50%; bottom:10px; transform:translateX(-50%);
+  width:min(420px,96vw); background:#0e1528; border:2px solid var(--accent); border-radius:18px;
+  padding:10px; z-index:40; display:grid; grid-template-columns:repeat(6,1fr); gap:6px;
+}
+.picker button{font-size:1.35rem; background:#1c2742; border:0; border-radius:10px; padding:8px 0; cursor:pointer}
+.note{font-size:.72rem; color:var(--muted); line-height:1.35}
+.fx{position:fixed; inset:0; pointer-events:none; z-index:15}
+.burst{
+  position:absolute; font-size:1.2rem; animation:rise .7s ease forwards;
+}
+@keyframes rise{to{transform:translateY(-70px) scale(1.4); opacity:0}}
+body.hit{animation:screen .28s linear}
+@keyframes screen{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+</style>
+</head>
+<body>
+<div class="scene-art" id="sceneArt">🏔️</div>
+<div class="fx" id="fx"></div>
+<div class="app">
+  <div class="brand">
+    <div>
+      <h1>Ular Tangga <span>2.0</span></h1>
+      <p id="themeName">Lembah Fajar · level mengubah dunia</p>
+    </div>
+    <div class="lvl"><small>LEVEL</small><b id="lvlNum">1</b></div>
+  </div>
+  <div class="panel" id="stage">
+    <div class="top">
+      <div class="turn" id="turnInfo">Siap main</div>
+      <div class="meta" id="timer">00:00</div>
+      <button class="ghost" id="muteBtn">Suara</button>
+      <button class="ghost" id="resetBtn">Menu</button>
+    </div>
+    <div class="mods" id="mods"></div>
+    <div class="board-wrap"><div class="board" id="board"></div></div>
+    <div class="play">
+      <div class="dice" id="dice">
+        <div class="dot" data-i="1"></div><div class="dot" data-i="2"></div><div class="dot" data-i="3"></div>
+        <div class="dot" data-i="4"></div><div class="dot" data-i="5"></div><div class="dot" data-i="6"></div>
+        <div class="dot" data-i="7"></div><div class="dot" data-i="8"></div><div class="dot" data-i="9"></div>
+      </div>
+      <div class="side">
+        <div class="chips" id="chips"></div>
+        <div class="hintline" id="hint">Tahan dadu, lepas untuk lempar.</div>
+      </div>
+    </div>
+    <div class="quote" id="quote">Kotak yang sudah diisi tetap milik yang pertama. Pendatang kembali.</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<div class="overlay" id="welcome">
+  <div class="card">
+    <h2>Ular Tangga 2.0</h2>
+    <p class="slogan">Solo, lawan AI, atau teman. Tema berganti tiap level.</p>
+    <div class="sec">Mode</div>
+    <div class="modes" id="modes">
+      <button class="pbtn" data-mode="solo">Solo</button>
+      <button class="pbtn on" data-mode="ai">Lawan AI</button>
+      <button class="pbtn" data-mode="friend">Teman</button>
+    </div>
+    <div class="sec" id="countLabel">Jumlah pemain manusia</div>
+    <div class="grid3" id="picks"></div>
+    <div id="aiBox">
+      <div class="sec">Jumlah AI</div>
+      <div class="grid3" id="aiPicks"></div>
+    </div>
+    <div class="sec">Nama dan ikon emosi</div>
+    <div class="names" id="names"></div>
+    <p class="note">Aturan baru: kalau kotak sudah ada pemain, yang pertama tetap. Kamu kembali ke kotak sebelumnya. Ular, tangga, jebakan, dan tema makin liar tiap level.</p>
+    <button class="go" id="startBtn">Mulai</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="end">
+  <div class="card">
+    <h2 id="endTitle">Selesai</h2>
+    <p class="slogan" id="endMsg"></p>
+    <div class="rank" id="rank"></div>
+    <button class="go" id="nextBtn">Lanjut</button>
+    <button class="ghost" id="menuBtn" style="width:100%;margin-top:8px">Ganti mode</button>
+  </div>
+</div>
+
+<script>
+const BASE_L = {1:38,4:14,9:31,21:42,28:84,36:44,51:67,71:91,80:100};
+const BASE_S = {16:6,47:26,49:11,56:53,62:19,64:60,87:24,93:73,95:75,98:78};
+const COLORS = ['#4ea2ff','#ffb020','#c084fc','#ff6b9d','#3dd68c','#2ee6e6'];
+const EMOS = ['😎','😤','😇','😈','🤠','🤓','🤩','🥶','🤡','👻','🐱','🦊','🐸','🐼','🦁','🐯','🦄','🐲','🤖','👽','🧙','👑','💀','🔥','🌟','🌙','⚡','🎯','💎','🍀','🌸','🌊'];
+const AI_NAMES = ['AI Nasib','AI Umbra','AI Kilat'];
+const THEMES = [
+  {name:'Lembah Fajar', art:'🏔️', glow1:'rgba(120,180,80,.45)', glow2:'rgba(255,196,120,.28)', scene:'linear-gradient(180deg,#1d3a28,#0c1610)', cell:'#1a3324', cell2:'#244833', snake:'#ff5d73', ladder:'#5dffb0'},
+  {name:'Laut Dalam', art:'🌊', glow1:'rgba(40,140,220,.5)', glow2:'rgba(40,220,200,.3)', scene:'linear-gradient(180deg,#07324a,#041018)', cell:'#0d3a52', cell2:'#14506e', snake:'#ff6b8a', ladder:'#7cf0d4'},
+  {name:'Planet Merah', art:'🪐', glow1:'rgba(220,80,50,.45)', glow2:'rgba(255,170,80,.25)', scene:'linear-gradient(180deg,#4a1c14,#140806)', cell:'#5a261c', cell2:'#733226', snake:'#ffd0a8', ladder:'#ffe08a'},
+  {name:'Semesta', art:'🌌', glow1:'rgba(120,80,255,.5)', glow2:'rgba(80,200,255,.28)', scene:'linear-gradient(180deg,#140826,#05040f)', cell:'#241446', cell2:'#321c62', snake:'#ff7ad9', ladder:'#9af7ff'},
+  {name:'Kota Neon', art:'🌃', glow1:'rgba(255,40,140,.4)', glow2:'rgba(40,220,255,.3)', scene:'linear-gradient(180deg,#240818,#070814)', cell:'#2a1030', cell2:'#3a1848', snake:'#ff4d8d', ladder:'#39f3ff'},
+  {name:'Lubang Gelap', art:'🕳️', glow1:'rgba(80,60,40,.35)', glow2:'rgba(40,180,160,.18)', scene:'linear-gradient(180deg,#1a120c,#050403)', cell:'#2a2118', cell2:'#3a2c20', snake:'#ff8a5b', ladder:'#d7c4a3'},
+  {name:'Neraka', art:'🔥', glow1:'rgba(255,60,20,.5)', glow2:'rgba(255,160,0,.28)', scene:'linear-gradient(180deg,#3a0c08,#100303)', cell:'#4a1610', cell2:'#641e14', snake:'#ffd27a', ladder:'#ff6b4a'},
+  {name:'Nirvana', art:'🪷', glow1:'rgba(255,220,140,.45)', glow2:'rgba(255,255,255,.2)', scene:'linear-gradient(180deg,#3a3420,#14110c)', cell:'#4a4028', cell2:'#5c5030', snake:'#ffb4c8', ladder:'#fff1b8'},
+  {name:'Taman Muse', art:'🌸', glow1:'rgba(255,120,170,.4)', glow2:'rgba(255,200,220,.25)', scene:'linear-gradient(180deg,#3a1830,#120810)', cell:'#4a2040', cell2:'#5e2a52', snake:'#ffd0e8', ladder:'#ffd0ea'},
+  {name:'Aurora Es', art:'🧊', glow1:'rgba(80,255,180,.35)', glow2:'rgba(120,160,255,.3)', scene:'linear-gradient(180deg,#10243a,#071018)', cell:'#16344e', cell2:'#1d4668', snake:'#ff8fa8', ladder:'#b8fff0'},
+  {name:'Hutan Emas', art:'🌲', glow1:'rgba(180,140,40,.4)', glow2:'rgba(80,160,60,.25)', scene:'linear-gradient(180deg,#243018,#0c1008)', cell:'#2c3a1c', cell2:'#3a4c24', snake:'#ffb070', ladder:'#e8ff8a'},
+  {name:'Gurun Api', art:'🏜️', glow1:'rgba(255,140,40,.42)', glow2:'rgba(255,80,40,.2)', scene:'linear-gradient(180deg,#4a3014,#140c06)', cell:'#5a3a18', cell2:'#704820', snake:'#ffd0a0', ladder:'#ffe7a0'}
+];
+const QUOTES = [
+  'Kotak yang sudah diisi tetap milik yang pertama.',
+  'Ular menguji. Tangga memberi. Tema menaikkan taruhan.',
+  'Serius di langkah, riang saat jatuh.',
+  'Level baru, dunia baru.',
+  'Yang duluan sampai, yang duluan punya kotak.'
+];
+let level = +(localStorage.getItem('utk_level')||1);
+let players=[], pos=[], current=0, moving=false, over=false;
+let mode='ai', humans=1, aiCount=1;
+let ladders={}, snakes={}, traps=new Set(), stars=new Set(), gusts=new Set(), portals={};
+let startAt=0, timer=null, holding=false, holdTimer=null, turns=0, audio=null, muted=false;
+let skipNext=new Set(), extra=false, pickerFor=-1;
+
+function themeOf(){ return THEMES[(level-1)%THEMES.length]; }
+function applyTheme(){
+  const t=themeOf();
+  const r=document.documentElement.style;
+  r.setProperty('--glow1', t.glow1); r.setProperty('--glow2', t.glow2);
+  r.setProperty('--scene', t.scene); r.setProperty('--cell', t.cell); r.setProperty('--cell2', t.cell2);
+  r.setProperty('--snake', t.snake); r.setProperty('--ladder', t.ladder);
+  document.getElementById('sceneArt').textContent=t.art;
+  document.getElementById('themeName').textContent=t.name+' · level '+level;
+}
+function toast(msg){
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show');
+  clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'), 1600);
+}
+function burst(sym){
+  const fx=document.getElementById('fx');
+  for(let i=0;i<8;i++){
+    const e=document.createElement('div'); e.className='burst'; e.textContent=sym;
+    e.style.left=(30+Math.random()*40)+'%'; e.style.top=(40+Math.random()*20)+'%';
+    fx.appendChild(e); setTimeout(()=>e.remove(),700);
+  }
+}
+function tone(f,d,type='sine',v=.12,to){
+  if(!audio||muted) return;
+  const o=audio.createOscillator(), g=audio.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,audio.currentTime);
+  if(to) o.frequency.linearRampToValueAtTime(to,audio.currentTime+d);
+  g.gain.setValueAtTime(v,audio.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);
+  o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime+d);
+}
+function sfx(kind){
+  if(kind==='hold') tone(90+Math.random()*70,.03,'sawtooth',.06);
+  if(kind==='step') tone(320,.05,'triangle',.09);
+  if(kind==='up'){ tone(380,.28,'sine',.16,760); burst('⬆️'); }
+  if(kind==='down'){ tone(240,.32,'sawtooth',.12,80); burst('🐍'); document.body.classList.add('hit'); setTimeout(()=>document.body.classList.remove('hit'),280); if(navigator.vibrate) navigator.vibrate(40); }
+  if(kind==='bump'){ tone(110,.2,'square',.14,60); burst('💥'); document.body.classList.add('hit'); setTimeout(()=>document.body.classList.remove('hit'),280); if(navigator.vibrate) navigator.vibrate([20,30,20]); }
+  if(kind==='star'){ tone(520,.16,'sine',.14,880); burst('⭐'); }
+  if(kind==='trap'){ tone(160,.22,'sawtooth',.12); burst('⚡'); }
+  if(kind==='portal'){ tone(240,.2,'triangle',.12,640); burst('🌀'); }
+  if(kind==='gust'){ tone(300,.16,'sine',.1,520); burst('💨'); }
+  if(kind==='win'){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.16),i*80)); burst('🏆'); }
+}
+function aiBias(){ return Math.min(.5, .08 + level*0.02); }
+function rollFor(isAI){
+  if(!isAI) return 1+Math.floor(Math.random()*6);
+  if(Math.random()<aiBias()) return 4+Math.floor(Math.random()*3);
+  return 1+Math.floor(Math.random()*6);
+}
+function buildBoardRules(){
+  ladders={...BASE_L}; snakes={...BASE_S};
+  traps=new Set(); stars=new Set(); gusts=new Set(); portals={};
+  const extra=Math.min(10, Math.floor((level-1)/2));
+  const cut=Math.min(5, Math.floor((level-1)/3));
+  if(cut>0) Object.keys(ladders).slice(-cut).forEach(k=>delete ladders[k]);
+  const used=new Set([100,...Object.keys(ladders),...Object.values(ladders),...Object.keys(snakes),...Object.values(snakes)].map(Number));
+  let added=0, guard=0;
+  while(added<extra && guard<300){
+    guard++;
+    const from=10+Math.floor(Math.random()*80);
+    const drop=5+Math.floor(Math.random()*(8+level));
+    const to=Math.max(2, from-drop);
+    if(used.has(from)||used.has(to)||from===to) continue;
+    snakes[from]=to; used.add(from); used.add(to); added++;
+  }
+  const take=(n,bag,lo=6,hi=96)=>{
+    let k=0,g=0;
+    while(k<n && g<250){
+      g++; const x=lo+Math.floor(Math.random()*(hi-lo));
+      if(used.has(x)) continue; bag.add(x); used.add(x); k++;
+    }
+  };
+  take(Math.min(6, Math.floor(level/2)), traps);
+  take(Math.min(4, 1+Math.floor(level/3)), stars);
+  if(level>=5) take(Math.min(3, Math.floor(level/4)), gusts);
+  if(level>=4){
+    const pairs=Math.min(2, Math.floor(level/4));
+    for(let p=0;p<pairs;p++){
+      let a=0,b=0,g=0;
+      while(g++<80 && (!a||!b||Math.abs(a-b)<8)){
+        a=12+Math.floor(Math.random()*70); b=12+Math.floor(Math.random()*70);
+        if(used.has(a)||used.has(b)||a===b) {a=0;b=0;}
+      }
+      if(a&&b){ portals[a]=b; portals[b]=a; used.add(a); used.add(b); }
+    }
+  }
+}
+function paintSetup(){
+  const picks=document.getElementById('picks'); picks.innerHTML='';
+  const max = mode==='solo' ? 1 : 6;
+  const label=document.getElementById('countLabel');
+  label.textContent = mode==='solo' ? 'Pemain' : mode==='ai' ? 'Jumlah manusia' : 'Jumlah teman';
+  document.getElementById('aiBox').classList.toggle('hidden', mode!=='ai');
+  if(humans>max) humans=max;
+  if(mode==='solo') humans=1;
+  for(let n=1;n<=max;n++){
+    const b=document.createElement('button'); b.className='pbtn'+(n===humans?' on':''); b.dataset.n=n; b.textContent=n;
+    picks.appendChild(b);
+  }
+  const aiP=document.getElementById('aiPicks'); aiP.innerHTML='';
+  for(let n=1;n<=3;n++){
+    const b=document.createElement('button'); b.className='pbtn'+(n===aiCount?' on':''); b.dataset.n=n; b.textContent=n;
+    aiP.appendChild(b);
+  }
+  const box=document.getElementById('names'); box.innerHTML='';
+  for(let i=0;i<humans;i++){
+    const row=document.createElement('div'); row.className='row';
+    const emo=document.createElement('button'); emo.className='ebtn'; emo.type='button'; emo.textContent=EMOS[i%EMOS.length]; emo.dataset.i=i;
+    emo.onclick=()=>openPicker(i, emo);
+    const inp=document.createElement('input'); inp.maxLength=14; inp.value=humans===1&&mode!=='friend'?'Kamu':('Pemain '+(i+1));
+    row.appendChild(emo); row.appendChild(inp); box.appendChild(row);
+  }
+}
+function openPicker(i, btn){
+  pickerFor=i;
+  let p=document.getElementById('picker');
+  if(!p){ p=document.createElement('div'); p.id='picker'; p.className='picker'; document.body.appendChild(p); }
+  p.innerHTML=EMOS.map(e=>`<button type="button" data-e="${e}">${e}</button>`).join('');
+  p.onclick=ev=>{
+    const b=ev.target.closest('button'); if(!b) return;
+    document.querySelectorAll('#names .ebtn')[pickerFor].textContent=b.dataset.e;
+    p.remove();
+  };
+}
+document.getElementById('modes').onclick=e=>{
+  const b=e.target.closest('.pbtn'); if(!b) return;
+  document.querySelectorAll('#modes .pbtn').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); mode=b.dataset.mode; paintSetup();
+};
+document.getElementById('picks').onclick=e=>{
+  const b=e.target.closest('.pbtn'); if(!b) return;
+  humans=+b.dataset.n; paintSetup();
+};
+document.getElementById('aiPicks').onclick=e=>{
+  const b=e.target.closest('.pbtn'); if(!b) return;
+  aiCount=+b.dataset.n;
+  document.querySelectorAll('#aiPicks .pbtn').forEach(x=>x.classList.toggle('on', +x.dataset.n===aiCount));
+};
+function setDice(n){
+  const map={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('hide', !map[n].includes(i+1)));
+}
+function cellOf(n){return document.querySelector(`.cell[data-n="${n}"]`)}
+function drawLinks(){
+  const old=document.querySelector('.links'); if(old) old.remove();
+  const board=document.getElementById('board');
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','links'); svg.setAttribute('viewBox','0 0 100 100');
+  const br=board.getBoundingClientRect();
+  const pt=n=>{
+    const c=cellOf(n); if(!c) return null;
+    const r=c.getBoundingClientRect();
+    return {x:(r.left-br.left+r.width/2)/br.width*100, y:(r.top-br.top+r.height/2)/br.height*100};
+  };
+  const line=(a,b,color)=>{
+    const A=pt(a), B=pt(b); if(!A||!B) return;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    const mx=(A.x+B.x)/2, my=(A.y+B.y)/2-6;
+    path.setAttribute('d',`M${A.x},${A.y} Q${mx},${my} ${B.x},${B.y}`);
+    path.setAttribute('fill','none'); path.setAttribute('stroke',color);
+    path.setAttribute('stroke-width','1.3'); path.setAttribute('stroke-linecap','round');
+    path.setAttribute('opacity','0.85'); svg.appendChild(path);
+  };
+  Object.entries(snakes).forEach(([a,b])=>line(+a,+b,'#ff5d73'));
+  Object.entries(ladders).forEach(([a,b])=>line(+a,+b,'#3dff9a'));
+  board.appendChild(svg);
+}
+function drawBoard(){
+  const b=document.getElementById('board'); b.innerHTML='';
+  for(let r=9;r>=0;r--) for(let c=0;c<10;c++){
+    const num=r%2===0 ? r*10+c+1 : r*10+(9-c)+1;
+    const el=document.createElement('div'); el.className='cell'; el.dataset.n=num;
+    if((r+c)%2===0) el.classList.add('alt');
+    if(num===100) el.classList.add('goal');
+    if(snakes[num]) el.classList.add('snake');
+    if(ladders[num]) el.classList.add('ladder');
+    if(traps.has(num)) el.classList.add('trap');
+    if(stars.has(num)) el.classList.add('star');
+    if(gusts.has(num)) el.classList.add('gust');
+    if(portals[num]) el.classList.add('portal');
+    let mark='';
+    if(snakes[num]) mark=`<span class="hint">↓${snakes[num]}</span>`;
+    else if(ladders[num]) mark=`<span class="hint">↑${ladders[num]}</span>`;
+    else if(traps.has(num)) mark='<span class="hint">⚡</span>';
+    else if(stars.has(num)) mark='<span class="hint">★</span>';
+    else if(gusts.has(num)) mark='<span class="hint">💨</span>';
+    else if(portals[num]) mark=`<span class="hint">◎${portals[num]}</span>`;
+    el.innerHTML=`<span>${num}</span>`+mark;
+    b.appendChild(el);
+  }
+  place();
+  requestAnimationFrame(drawLinks);
+}
+function place(){
+  document.querySelectorAll('.token').forEach(t=>t.remove());
+  pos.forEach((p,i)=>{
+    if(!p) return;
+    const cell=cellOf(p); if(!cell) return;
+    const t=document.createElement('div');
+    t.className='token'+(players[i].ai?' ai':'');
+    t.style.background=players[i].color; t.textContent=players[i].emo;
+    const k=cell.querySelectorAll('.token').length;
+    const spots=[['6%','6%'],['6%','auto'],['auto','6%'],['auto','auto']];
+    const s=spots[Math.min(k,3)];
+    t.style.top=s[0]; t.style.left=s[1];
+    if(s[1]==='auto') t.style.right='6%';
+    if(s[0]==='auto') t.style.bottom='6%';
+    cell.appendChild(t);
+    requestAnimationFrame(()=>t.classList.add('hop'));
+  });
+}
+function occupiedBy(square, me){
+  return pos.findIndex((p,i)=>i!==me && p===square && p>0);
+}
+function ui(){
+  document.getElementById('lvlNum').textContent=level;
+  applyTheme();
+  const mods=[
+    `<span class="mod bad">ular ${Object.keys(snakes).length}</span>`,
+    `<span class="mod good">tangga ${Object.keys(ladders).length}</span>`,
+    traps.size?`<span class="mod bad">jebakan ${traps.size}</span>`:'',
+    stars.size?`<span class="mod good">bintang ${stars.size}</span>`:'',
+    gusts.size?`<span class="mod info">angin ${gusts.size}</span>`:'',
+    Object.keys(portals).length?`<span class="mod info">portal ${Object.keys(portals).length/2}</span>`:'',
+    mode==='ai'?`<span class="mod info">bias AI ${Math.round(aiBias()*100)}%</span>`:''
+  ].filter(Boolean).join('');
+  document.getElementById('mods').innerHTML=mods;
+  if(!players.length) return;
+  const p=players[current];
+  document.getElementById('turnInfo').textContent = over ? 'Selesai' : (p.ai ? 'Giliran '+p.name : 'Giliran '+p.name+' '+p.emo);
+  document.getElementById('turnInfo').style.borderLeft='5px solid '+p.color;
+  document.getElementById('chips').innerHTML=players.map((pl,i)=>`<div class="chip ${i===current?'on':''}" style="border-color:${i===current?pl.color:'transparent'}"><span class="emo">${pl.emo}</span>${pl.name} <b>${pos[i]||'·'}</b></div>`).join('');
+  document.getElementById('quote').textContent=QUOTES[(level-1)%QUOTES.length];
+}
+function tick(){
+  const s=Math.floor((Date.now()-startAt)/1000);
+  document.getElementById('timer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+async function hopTo(n){
+  pos[current]=n; place();
+  const c=cellOf(n); if(c){ c.classList.add('pulse'); setTimeout(()=>c.classList.remove('pulse'),220); }
+  sfx('step'); await sleep(95);
+}
+async function move(roll){
+  moving=true; turns++; extra=false;
+  const me=current;
+  if(skipNext.has(me)){
+    skipNext.delete(me);
+    toast(players[me].name+' terlewat. Jebakan sebelumnya.');
+    sfx('trap');
+    moving=false; advance(); return;
+  }
+  const startPos=pos[me];
+  let to=startPos+roll;
+  if(to>100) to=100-(to-100);
+  for(let s=startPos+1;s<=to;s++) await hopTo(s);
+  let here=pos[me];
+  if(ladders[here]){
+    sfx('up'); toast(players[me].name+' naik tangga ke '+ladders[here]);
+    cellOf(here)?.classList.add('flash-up');
+    pos[me]=ladders[here]; place(); await sleep(260); here=pos[me];
+  } else if(snakes[here]){
+    sfx('down'); toast(players[me].name+' terkena ular ke '+snakes[here]);
+    cellOf(here)?.classList.add('shake');
+    pos[me]=snakes[here]; place(); await sleep(300); here=pos[me];
+  }
+  if(portals[here]){
+    const dest=portals[here];
+    sfx('portal'); toast('Portal ke '+dest);
+    pos[me]=dest; place(); await sleep(220); here=pos[me];
+  }
+  if(gusts.has(here)){
+    const dest=Math.min(100, here+3);
+    sfx('gust'); toast('Angin mendorong ke '+dest);
+    pos[me]=dest; place(); await sleep(180); here=pos[me];
+  }
+  const occ=occupiedBy(pos[me], me);
+  if(occ>=0 && pos[me]!==100){
+    sfx('bump');
+    toast(players[me].emo+' terbentur '+players[occ].emo+'. Yang pertama tetap. Kembali.');
+    document.querySelector('.token')?.classList.add('bump');
+    pos[me]=startPos; place(); await sleep(280);
+    moving=false; advance(); return;
+  }
+  if(stars.has(pos[me]) && pos[me]!==100){ extra=true; sfx('star'); toast(players[me].name+' dapat giliran lagi.'); }
+  if(traps.has(pos[me]) && pos[me]!==100){ skipNext.add(me); sfx('trap'); toast(players[me].name+' kena jebakan. Giliran berikutnya lewat.'); }
+  if(pos[me]===100){ finish(); return; }
+  moving=false; advance();
+}
+function advance(){
+  if(over) return;
+  if(!extra && players.length>1) current=(current+1)%players.length;
+  ui();
+  if(players[current].ai && !over) setTimeout(aiTurn, 520);
+}
+async function aiTurn(){
+  if(over||moving||!players[current]?.ai) return;
+  const roll=rollFor(true);
+  setDice(roll); sfx('hold');
+  document.getElementById('hint').textContent=players[current].name+' melempar '+roll;
+  await sleep(380); await move(roll);
+}
+function finish(){
+  over=true; moving=false; clearInterval(timer); sfx('win');
+  const secs=Math.floor((Date.now()-startAt)/1000);
+  const winner=players[current];
+  const humanWin=!winner.ai;
+  let jump=0;
+  if(humanWin || mode==='friend' || mode==='solo'){
+    jump = (turns<=14 || secs<=45) ? 3 : (turns<=22 || secs<=80) ? 2 : 1;
+    if(mode==='ai' && !humanWin) jump=0;
+    level += jump;
+    localStorage.setItem('utk_level', level);
+  }
+  const nextTheme=THEMES[(level-1)%THEMES.length];
+  document.getElementById('endTitle').textContent = winner.emo+' '+winner.name+' sampai';
+  document.getElementById('endMsg').textContent = jump
+    ? `Selesai ${turns} giliran · ${document.getElementById('timer').textContent}. Level +${jump}. Dunia berikutnya: ${nextTheme.art} ${nextTheme.name}.`
+    : 'AI lebih dulu. Level tetap. Dunia belum berganti.';
+  const rank=players.map((p,i)=>({...p,pos:pos[i]})).sort((a,b)=>b.pos-a.pos);
+  document.getElementById('rank').innerHTML=rank.map((r,i)=>`<div><span>${i+1}. ${r.emo} <b style="color:${r.color}">${r.name}</b></span><span>${r.pos}</span></div>`).join('');
+  document.getElementById('nextBtn').textContent = jump ? 'Level '+level+' · '+nextTheme.name : 'Ulangi level '+level;
+  document.getElementById('end').classList.remove('hidden');
+  ui();
+}
+const dice=document.getElementById('dice');
+dice.addEventListener('pointerdown', e=>{
+  if(moving||over||holding||!document.getElementById('welcome').classList.contains('hidden')) return;
+  if(players[current]?.ai) return;
+  e.preventDefault(); holding=true; dice.classList.add('hold');
+  document.getElementById('hint').textContent='Lepas untuk berhenti...';
+  holdTimer=setInterval(()=>{ setDice(1+Math.floor(Math.random()*6)); sfx('hold'); },55);
+});
+function release(){
+  if(!holding) return; holding=false; dice.classList.remove('hold'); clearInterval(holdTimer);
+  const roll=rollFor(false); setDice(roll);
+  document.getElementById('hint').textContent='Hasil '+roll;
+  move(roll);
+}
+dice.addEventListener('pointerup', release);
+dice.addEventListener('pointerleave', release);
+dice.addEventListener('pointercancel', release);
+
+function begin(){
+  document.getElementById('welcome').classList.add('hidden');
+  document.getElementById('end').classList.add('hidden');
+  document.getElementById('picker')?.remove();
+  const inputs=[...document.querySelectorAll('#names input')];
+  const emos=[...document.querySelectorAll('#names .ebtn')];
+  players=[]; pos=[];
+  for(let i=0;i<humans;i++){
+    players.push({name:(inputs[i]?.value.trim())||('Pemain '+(i+1)), color:COLORS[i%COLORS.length], ai:false, emo:emos[i]?.textContent||EMOS[i]});
+    pos.push(0);
+  }
+  if(mode==='ai'){
+    for(let i=0;i<aiCount;i++){
+      players.push({name:AI_NAMES[i], color:'#7cf0d4', ai:true, emo:EMOS[12+i]});
+      pos.push(0);
+    }
+  }
+  current=0; moving=false; over=false; turns=0; skipNext=new Set();
+  buildBoardRules(); drawBoard(); setDice(1); ui();
+  startAt=Date.now(); clearInterval(timer); timer=setInterval(tick,1000); tick();
+  document.getElementById('hint').textContent = players[0].ai ? 'AI mulai.' : 'Tahan dadu, lepas untuk lempar.';
+  if(players[0].ai) setTimeout(aiTurn, 600);
+}
+document.getElementById('startBtn').onclick=()=>{
+  audio=audio||new (window.AudioContext||window.webkitAudioContext)(); audio.resume();
+  tone(262,.12); setTimeout(()=>tone(392,.16),120); setTimeout(begin,280);
+};
+document.getElementById('nextBtn').onclick=()=>{ document.getElementById('end').classList.add('hidden'); begin(); };
+document.getElementById('menuBtn').onclick=()=>{ document.getElementById('end').classList.add('hidden'); document.getElementById('welcome').classList.remove('hidden'); paintSetup(); };
+document.getElementById('resetBtn').onclick=()=>{ clearInterval(timer); over=true; moving=false; document.getElementById('welcome').classList.remove('hidden'); paintSetup(); };
+document.getElementById('muteBtn').onclick=()=>{ muted=!muted; document.getElementById('muteBtn').textContent=muted?'Mati':'Suara'; };
+window.addEventListener('resize', ()=>{ if(players.length) drawLinks(); });
+applyTheme(); paintSetup(); document.getElementById('lvlNum').textContent=level;
+</script>
+</body>
+</html>
